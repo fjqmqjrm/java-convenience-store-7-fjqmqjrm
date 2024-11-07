@@ -43,15 +43,15 @@ public class Product {
         return name;
     }
 
-    private int validatePrice(int price) {
-        if (price <= 0 || price > MAX_PRICE) {
+    private int validatePrice(Integer price) {
+        if (price == null || price <= 0 || price > MAX_PRICE) {
             throw new IllegalArgumentException(ProductErrorMessages.INVALID_PRICE.getMessage());
         }
         return price;
     }
 
-    private int validateQuantity(int quantity) {
-        if (quantity < 0) {
+    private int validateQuantity(Integer quantity) {
+        if (quantity == null || quantity < 0) {
             throw new IllegalArgumentException(ProductErrorMessages.INVALID_QUANTITY.getMessage());
         }
         return quantity;

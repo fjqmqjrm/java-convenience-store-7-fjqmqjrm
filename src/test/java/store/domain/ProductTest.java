@@ -17,6 +17,14 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("상품 이름이 null일 때 예외 발생")
+    void 상품_이름_null_예외() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> new Product(null, 1000, 10, Promotion.TWO_PLUS_ONE));
+        assertEquals(ProductErrorMessages.INVALID_NAME.getMessage(), exception.getMessage());
+    }
+
+    @Test
     @DisplayName("상품 가격이 음수일 때 예외 발생")
     void 상품_가격_음수_예외() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
