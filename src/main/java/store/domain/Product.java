@@ -29,7 +29,6 @@ public class Product {
         return this.quantity;
     }
 
-
     private void validate() {
         validateName(name);
         validatePrice(price);
