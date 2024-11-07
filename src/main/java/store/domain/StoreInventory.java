@@ -12,6 +12,6 @@ public class StoreInventory {
     }
 
     public List<Product> getProducts() {
-        return new ArrayList<>(products);  // 외부에 불변성 제공
+        return new ArrayList<>(products);
     }
 }
