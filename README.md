@@ -1,38 +1,145 @@
 # java-convenience-store-precourse
 
-# Domain 
-### Product - 상품 정보, 재고 관리
-- Product는 **1. 상품 이름, 2. 상품 가격, 3. 재고, 4. 적용된 프로모션**을 멤버변수로 가진다.
-- 프로모션은 추후 변경 가능성을 고려하여 관리한다.
-- (1) 상품 이름
-  - 공백일 수 없다. 
-- (2) 상품 가격
-  - 양의 정수여야 하며, 0 이하일 수 없다.
-  - 공백일 수 없다.
-  - 문자열이 될 수 없다.
-  - [경계값 설정] 100,000(원)이 최대 금액이다.
-- (3) 재고
-  - 상품 재고는 0 이상의 정수여야한다. 
-  - 공백일 수 없다.
-  - 0 미만일 수 없다. 
-  - 문자열일 수 없다.
-- (4) 프로모션 
-  - 적용된 프로모션이 없다면 NONE을 기본값으로 가진다.
+# controller
 
-### Promotion - 프로모션 유형 정의 및 관리, 유형 변환
-- 다양한 프로모션 유형을 고정된 집합으로 관리하며, 프로모션이 없는 경우 NONE을 반환한다.
+- 프레젠테이션 계층으로, 사용자 입력을 받아 비즈니스 로직을 호출하고 결과를 반환
 
-### StoreInventory - 편의점 상품 목록 관리
-- StoreInventory는 편의점 상품 목록(products)을 일괄적으로 관리하는 일급컬렉션이다.
-- 초기 제품 목록이 null이거나 비어있을 수 없다.
+| 클래스명              | 역할                      |
+| -------------------- | ------------------------- |
+| OrderController      | 주문 프로세스 관리         |
+| ProductController    | 상품 관련 로직 관리        |
+| MembershipController | 멤버십 할인 적용 로직 관리 |
 
-### Cashier - 구매 관리, 재고 조정 책임, 결제 및 할인(프로모션, 멤버십) 관리
-- Cashier는 **1. 상품 목록, 2. 구매한 상품과 그 수량을 담은 Map, 3. 총 구매 금액, 4. 멤버십 할인 적용 여부**를 멤버 변수로 갖는다.
-- StoreInventory의 재고 관리 및 변경 책임을 Cashier가 전담하여 수행한다. 
-- StoreInventory가 null이거나 비어있을 수 없다.
+# product
+
+### domain
+
+| 클래스명  | 역할                |
+| --------- | ------------------- |
+| Product   | 상품 속성 및 행위 정의  |
+| Promotion | 프로모션 정보 정의     |
+
+### service
+
+| 클래스명           | 역할                        |
+| ------------------ | --------------------------- |
+| ProductService     | 상품 관련 서비스 로직을 처리   |
+| PromotionService   | 프로모션 적용 및 계산 로직을 처리 |
+
+### repository
+
+| 클래스명            | 역할             |
+| ------------------- | ---------------- |
+| ProductRepository   | 상품 데이터 관리   |
+| PromotionRepository | 프로모션 데이터 관리 |
+
+# order
+
+### domain
+
+| 클래스명   | 역할              |
+| ---------- | ----------------- |
+| Order      | 주문 전체를 관리    |
+| OrderItem  | 개별 주문 항목 관리 |
+| Receipt    | 영수증 생성 관리    |
+
+### service
+
+| 클래스명      | 역할                      |
+| ------------- | ------------------------- |
+| OrderService  | 주문 생성, 결제 처리 등 로직 처리 |
+
+### repository
+
+| 클래스명         | 역할                   |
+| ---------------- | ---------------------- |
+| OrderRepository  | 주문 데이터를 저장하고 관리 |
+
+# membership
+
+### service
+
+| 클래스명           | 역할                  |
+| ------------------ | --------------------- |
+| MembershipService  | 멤버십 할인 적용 로직 담당 |
+
+# ui
+
+| 클래스명    | 역할             |
+| ----------- | ---------------- |
+| InputView   | 사용자 입력 처리    |
+| OutputView  | 프로그램 출력 담당 |
+---
+
+## 디렉터리 구조
+    src/
+    ├── main/
+    │   ├── java/
+    │   │   └── store/
+    │   │       ├── Application.java
+    │   │       ├── controller/
+    │   │       │   ├── OrderController.java
+    │   │       │   └── ProductController.java
+    │   │       ├── product/
+    │   │       │   ├── domain/
+    │   │       │   │   ├── Product.java
+    │   │       │   │   └── Promotion.java
+    │   │       │   ├── service/
+    │   │       │   │   ├── ProductService.java
+    │   │       │   │   └── PromotionService.java
+    │   │       │   └── repository/
+    │   │       │       ├── ProductRepository.java
+    │   │       │       └── PromotionRepository.java
+    │   │       ├── order/
+    │   │       │   ├── domain/
+    │   │       │   │   ├── Order.java
+    │   │       │   │   ├── OrderItem.java
+    │   │       │   │   └── Receipt.java
+    │   │       │   ├── service/
+    │   │       │   │   └── OrderService.java
+    │   │       │   └── repository/
+    │   │       │       └── OrderRepository.java
+    │   │       ├── membership/
+    │   │       │   └── service/
+    │   │       │       └── MembershipService.java
+    │   │       └── ui/
+    │   │           ├── InputView.java
+    │   │           └── OutputView.java
+    │   └── resources/
+    │       ├── products.md
+    │       └── promotions.md
+    └── test/
+    └── java/
+    └── store/
+    ├── controller/
+    │   ├── OrderControllerTest.java
+    │   └── ProductControllerTest.java
+    ├── product/
+    │   ├── service/
+    │   │   ├── ProductServiceTest.java
+    │   │   └── PromotionServiceTest.java
+    │   └── repository/
+    │       ├── ProductRepositoryTest.java
+    │       └── PromotionRepositoryTest.java
+    ├── order/
+    │   ├── service/
+    │   │   └── OrderServiceTest.java
+    │   └── repository/
+    │       └── OrderRepositoryTest.java
+    └── membership/
+      └── service/
+        └── MembershipServiceTest.java
 
 
+### 사용자 입력 에러
+- 사용자가 잘못된 값을 입력했을 때, "[ERROR]"로 시작하는 오류 메시지와 함께 상황에 맞는 안내를 출력한다.
+  - 구매할 상품과 수량 형식이 올바르지 않은 경우: `[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.` 
+  - 존재하지 않는 상품을 입력한 경우: `[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.`
+  - 구매 수량이 재고 수량을 초과한 경우: `[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.`
+  - 기타 잘못된 입력의 경우: `[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.`
 
+
+---
 
 ## **기능 요구 사항**
 
@@ -89,7 +196,7 @@
     - 두 파일 모두 내용의 형식을 유지한다면 값은 수정할 수 있다.
 - 구매할 상품과 수량을 입력 받는다. 상품명, 수량은 하이픈(-)으로, 개별 상품은 대괄호([])로 묶어 쉼표(,)로 구분한다.
 
-```css
+```
 [콜라-10],[사이다-3]
 
 ```
