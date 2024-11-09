@@ -5,16 +5,19 @@ import java.util.Objects;
 public class Product {
     private String name;
     private int price;
-    private int quantity;
+    private int regularQuantity;
+    private int promotionStock;
     private String promotion;
 
-    public Product(String name, int price, int quantity, String promotion) {
+    public Product(String name, int price, int regularQuantity, String promotion, int promotionStock) {
         validateName(name);
         validatePrice(price);
-        validateQuantity(quantity);
+        validateQuantity(regularQuantity);
+        validatePromotionStock(promotionStock);
         this.name = name;
         this.price = price;
-        this.quantity = quantity;
+        this.regularQuantity = regularQuantity;
+        this.promotionStock = promotionStock;
         this.promotion = Objects.toString(promotion, "NONE");
     }
 
@@ -36,6 +39,12 @@ public class Product {
         }
     }
 
+    private void validatePromotionStock(int promotionStock) {
+        if (promotionStock < 0) {
+            throw new IllegalArgumentException("[ERROR] 프로모션 재고는 0 이상이어야 합니다.");
+        }
+    }
+
     public String getName() {
         return name;
     }
@@ -44,28 +53,58 @@ public class Product {
         return price;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public int getRegularQuantity() {
+        return regularQuantity;
     }
 
     public String getPromotion() {
         return promotion;
     }
 
+    public void setPromotionStock(int promotionStock) {
+        this.promotionStock = promotionStock;
+    }
+
+    public void setRegularQuantity(int regularQuantity) {
+        this.regularQuantity = regularQuantity;
+    }
+
+    public int getPromotionStock() {
+        return promotionStock;
+    }
+
+    public void setPromotion(String promotion) {
+        this.promotion = promotion;
+    }
+
     public void reduceQuantity(int amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("[ERROR] 감소할 수량은 1 이상이어야 합니다.");
         }
-        if (amount > quantity) {
+        if (amount > regularQuantity) {
             throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 감소시킬 수 없습니다.");
         }
-        quantity -= amount;
+        regularQuantity -= amount;
     }
 
     public void increaseQuantity(int amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("[ERROR] 증가할 수량은 1 이상이어야 합니다.");
         }
-        quantity += amount;
+        regularQuantity += amount;
+    }
+
+    public void reducePromotionStock(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("[ERROR] 감소할 수량은 1 이상이어야 합니다.");
+        }
+        if (amount > promotionStock) {
+            throw new IllegalArgumentException("[ERROR] 프로모션 재고가 부족합니다.");
+        }
+        promotionStock -= amount;
+    }
+
+    public int getApplicableFreeItems(int freeItems) {
+        return Math.min(freeItems, this.promotionStock);
     }
 }

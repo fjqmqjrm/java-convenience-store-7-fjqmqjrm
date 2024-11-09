@@ -2,11 +2,11 @@ package store.product.repository;
 
 import store.product.domain.Promotion;
 import store.product.parser.PromotionParser;
+import store.util.ResourcePaths;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.*;
 
 public class PromotionRepository {
@@ -17,7 +17,7 @@ public class PromotionRepository {
     }
 
     private void initializePromotions() {
-        List<String> lines = readLines("src/main/resources/promotions.md");
+        List<String> lines = readLines(ResourcePaths.PROMOTION_FILE_PATH.getPath());
         List<Promotion> promotionList = parsePromotions(lines);
         addPromotionsToMap(promotionList);
     }
@@ -49,15 +49,4 @@ public class PromotionRepository {
         return new HashMap<>(promotions);
     }
 
-    public void update(Promotion promotion) {
-        promotions.put(promotion.getName(), promotion);
-    }
-
-    public void delete(String name) {
-        promotions.remove(name);
-    }
-
-    public void save(Promotion promotion) {
-        promotions.put(promotion.getName(), promotion);
-    }
 }

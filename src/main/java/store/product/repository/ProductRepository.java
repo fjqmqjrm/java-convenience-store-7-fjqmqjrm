@@ -2,6 +2,7 @@ package store.product.repository;
 
 import store.product.domain.Product;
 import store.product.parser.ProductParser;
+import store.util.ResourcePaths;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,7 +17,7 @@ public class ProductRepository {
     }
 
     private void initializeProducts() {
-        List<String> lines = readLines("src/main/resources/products.md");
+        List<String> lines = readLines(ResourcePaths.PRODUCT_FILE_PATH.getPath());
         List<Product> productList = parseProducts(lines);
         addProductsToMap(productList);
     }
@@ -52,11 +53,4 @@ public class ProductRepository {
         products.put(product.getName(), product);
     }
 
-    public void delete(String name) {
-        products.remove(name);
-    }
-
-    public void save(Product product) {
-        products.put(product.getName(), product);
-    }
 }

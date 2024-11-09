@@ -2,21 +2,20 @@ package store.product.parser;
 
 import store.product.domain.Product;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ProductParser {
 
     public List<Product> parseProducts(List<String> lines) {
-        List<Product> products = new ArrayList<>();
+        Map<String, Product> productMap = new HashMap<>();
         for (String line : lines) {
-            if (isValidLine(line)) {
-                Product product = parseProduct(line);
-                if (product != null) {
-                    products.add(product);
-                }
-            }
+            if (!isValidLine(line)) continue;
+            Product product = parseProduct(line);
+            if (product != null) mergeProduct(productMap, product);
         }
-        return products;
+        return new ArrayList<>(productMap.values());
     }
 
     private boolean isValidLine(String line) {
@@ -25,21 +24,76 @@ public class ProductParser {
 
     private Product parseProduct(String line) {
         String[] tokens = line.split(",");
-        if (tokens.length != 4) {
-            return null;
-        }
+        if (!hasValidTokenLength(tokens)) return null;
         String name = tokens[0];
-        int price = Integer.parseInt(tokens[1]);
-        int quantity = Integer.parseInt(tokens[2]);
+        int price = parseInteger(tokens[1]);
+        int quantity = parseInteger(tokens[2]);
         String promotion = parsePromotion(tokens[3]);
-        return new Product(name, price, quantity, promotion);
+        return new Product(name, price, calculateRegularQuantity(promotion, quantity),
+                promotion, calculatePromotionStock(promotion, quantity));
+    }
+
+    private boolean hasValidTokenLength(String[] tokens) {
+        return tokens.length == 4;
     }
 
     private String parsePromotion(String token) {
-        String promotion = token;
-        if ("null".equals(promotion)) {
-            promotion = null;
+        if ("null".equals(token) || token == null) return "NONE";
+        return token;
+    }
+
+    private int parseInteger(String token) {
+        try {
+            return Integer.parseInt(token);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("[ERROR] 숫자 형식이 올바르지 않습니다: " + token);
         }
-        return promotion;
+    }
+
+    private int calculatePromotionStock(String promotion, int quantity) {
+        if (promotion.equals("NONE")) return 0;
+        return quantity;
+    }
+
+    private int calculateRegularQuantity(String promotion, int quantity) {
+        if (promotion.equals("NONE")) return quantity;
+        return 0;
+    }
+
+    private void mergeProduct(Map<String, Product> productMap, Product newProduct) {
+        String name = newProduct.getName();
+        if (isRegularProduct(newProduct)) {
+            mergeRegularProduct(productMap, newProduct);
+            return;
+        }
+        mergePromotionProduct(productMap, newProduct);
+    }
+
+    private boolean isRegularProduct(Product product) {
+        return product.getPromotion().equals("NONE");
+    }
+
+    private void mergeRegularProduct(Map<String, Product> productMap, Product newProduct) {
+        String name = newProduct.getName();
+        Product existingProduct = productMap.get(name);
+        if (existingProduct != null) {
+            existingProduct.setRegularQuantity(existingProduct.getRegularQuantity() + newProduct.getRegularQuantity());
+            return;
+        }
+        productMap.put(name, newProduct);
+    }
+
+    private void mergePromotionProduct(Map<String, Product> productMap, Product newProduct) {
+        Product existingProduct = productMap.get(newProduct.getName());
+        if (existingProduct == null) { productMap.put(newProduct.getName(), newProduct); return; }
+        if (isDifferentPromotion(existingProduct, newProduct))
+            throw new IllegalArgumentException("[ERROR] 동일 상품에 여러 프로모션이 적용될 수 없습니다: " + newProduct.getName());
+        existingProduct.setPromotionStock(existingProduct.getPromotionStock() + newProduct.getPromotionStock());
+        existingProduct.setPromotion(newProduct.getPromotion());
+    }
+
+    private boolean isDifferentPromotion(Product existingProduct, Product newProduct) {
+        return !existingProduct.getPromotion().equals("NONE") &&
+                !existingProduct.getPromotion().equals(newProduct.getPromotion());
     }
 }
