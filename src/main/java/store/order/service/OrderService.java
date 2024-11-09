@@ -10,6 +10,7 @@ import store.product.repository.ProductRepository;
 import store.product.service.PromotionService;
 import store.product.service.StockService;
 
+
 public class OrderService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
@@ -36,6 +37,7 @@ public class OrderService {
         validateStock(product, quantity);
         Promotion promotion = promotionService.getActivePromotion(product);
         applyPromotion(order, product, quantity, promotion);
+
         orderRepository.save(order);
     }
 
@@ -53,7 +55,13 @@ public class OrderService {
 
 
     private void applyPromotion(Order order, Product product, int quantity, Promotion promotion) {
-        int freeItems = (promotion != null) ? promotionService.calculateFreeItems(quantity, promotion) : 0;
+        int freeItems = 0;
+        if (promotion != null) {
+            freeItems = promotionService.calculateFreeItems(quantity, promotion);
+            if (freeItems > quantity) {
+                freeItems = quantity;
+            }
+        }
         order.addOrderItem(product, quantity, promotion, freeItems);
         stockService.reduceStock(product, quantity, freeItems);
     }
@@ -63,16 +71,6 @@ public class OrderService {
         if (order == null) {
             throw new IllegalStateException("[ERROR] 주문이 생성되지 않았습니다.");
         }
-    }
-
-    public Receipt generateReceipt(Order order) {
-        validateOrder(order);
-        int totalAmount = order.calculateTotalAmount();
-        int promotionDiscount = order.calculatePromotionDiscount();
-        int amountAfterPromotion = totalAmount - promotionDiscount;
-        int membershipDiscount = (order.isMembership()) ? membershipService.applyMembershipDiscount(order) : 0;
-        int finalAmount = amountAfterPromotion - membershipDiscount;
-        return new Receipt(order, totalAmount, promotionDiscount, membershipDiscount, finalAmount);
     }
 
     public void completeOrder(Order order) {

@@ -104,7 +104,4 @@ public class Product {
         promotionStock -= amount;
     }
 
-    public int getApplicableFreeItems(int freeItems) {
-        return Math.min(freeItems, this.promotionStock);
-    }
 }

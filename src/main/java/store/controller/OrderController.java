@@ -83,9 +83,18 @@ public class OrderController {
 
     private void handleMembershipDiscount(Order order) {
         outputView.printMembershipDiscountPrompt();
-        String membershipInput = inputView.readYesOrNo();
-        discountService.applyMembershipDiscount(order, membershipInput);
+        boolean validInput = false;
+        while (!validInput) {
+            try {
+                String membershipInput = inputView.readYesOrNo();
+                discountService.applyMembershipDiscount(order, membershipInput);
+                validInput = true;
+            } catch (IllegalArgumentException e) {
+                outputView.printErrorMessage(e.getMessage());
+            }
+        }
     }
+
 
     private void printReceipt(Order order) {
         int totalDiscount = discountService.calculateTotalDiscount(order);
@@ -93,8 +102,14 @@ public class OrderController {
     }
 
     private boolean promptContinueShopping() {
-        System.out.println();
-        System.out.println("감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
-        return "Y".equalsIgnoreCase(inputView.readYesOrNo());
+        outputView.printPromptContinueShoppingMessage();
+        while (true) {
+            try {
+                String response = inputView.readYesOrNo();
+                return "Y".equals(response);
+            } catch (IllegalArgumentException e) {
+                outputView.printErrorMessage(e.getMessage());
+            }
+        }
     }
 }

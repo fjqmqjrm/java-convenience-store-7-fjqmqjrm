@@ -6,27 +6,47 @@ import java.util.List;
 public class InputParser {
 
     public List<String[]> parseItems(String input) {
-        if (!input.startsWith("[") || !input.endsWith("]")) {
-            throw new IllegalArgumentException("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
-        }
-        String[] items = input.substring(1, input.length() - 1).split("],\\[");
+        validateFormat(input.trim());
+        String[] items = input.trim().substring(1, input.length() - 1).split("],\\s*\\["); // 공백 허용
         List<String[]> parsedItems = new ArrayList<>();
 
         for (String item : items) {
-            String[] parts = splitItem(item);
-            validateItemFormat(parts);
+            String[] parts = splitAndValidateItem(item.trim());
             parsedItems.add(parts);
         }
         return parsedItems;
     }
 
-    private String[] splitItem(String item) {
-        return item.replace("[", "").replace("]", "").split("-");
+    private void validateFormat(String input) {
+        if (!input.startsWith("[") || !input.endsWith("]")) {
+            throw new IllegalArgumentException("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        }
     }
 
-    private void validateItemFormat(String[] parts) {
-        if (parts.length != 2 || parts[0].trim().isEmpty() || parts[1].trim().isEmpty()) {
+    private String[] splitAndValidateItem(String item) {
+        String[] parts = item.replace("[", "").replace("]", "").split("\\s*-\\s*"); // 공백 허용
+        validateItemParts(parts);
+        return parts;
+    }
+
+    private void validateItemParts(String[] parts) {
+        if (parts.length != 2) {
             throw new IllegalArgumentException("[ERROR] 올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
+        }
+        if (parts[0].trim().isEmpty()) {
+            throw new IllegalArgumentException("[ERROR] 상품명이 비어있습니다. 다시 입력해 주세요.");
+        }
+        if (!isValidQuantity(parts[1].trim())) {
+            throw new IllegalArgumentException("[ERROR] 수량은 1 이상의 숫자여야 합니다. 다시 입력해 주세요.");
+        }
+    }
+
+    private boolean isValidQuantity(String quantityStr) {
+        try {
+            int quantity = Integer.parseInt(quantityStr);
+            return quantity >= 1;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
@@ -35,14 +55,6 @@ public class InputParser {
     }
 
     public int extractQuantity(String[] parts) {
-        try {
-            int quantity = Integer.parseInt(parts[1].trim());
-            if (quantity < 1) {
-                throw new IllegalArgumentException("[ERROR] 수량은 1 이상의 숫자여야 합니다. 다시 입력해 주세요.");
-            }
-            return quantity;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("[ERROR] 수량은 숫자여야 합니다. 다시 입력해 주세요.");
-        }
+        return Integer.parseInt(parts[1].trim());
     }
 }

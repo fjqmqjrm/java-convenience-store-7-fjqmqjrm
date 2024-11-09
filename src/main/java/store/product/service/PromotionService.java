@@ -1,14 +1,14 @@
 package store.product.service;
 
+import camp.nextstep.edu.missionutils.DateTimes;
 import store.product.domain.Product;
 import store.product.domain.Promotion;
 import store.product.repository.PromotionRepository;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 public class PromotionService {
-    private PromotionRepository promotionRepository;
+    private final PromotionRepository promotionRepository;
 
     public PromotionService(PromotionRepository promotionRepository) {
         this.promotionRepository = promotionRepository;
@@ -18,50 +18,33 @@ public class PromotionService {
         return promotionRepository.findByName(name);
     }
 
-    public boolean isPromotionActive(String promotionName, LocalDate date) {
-        Optional<Promotion> promotionOpt = promotionRepository.findByName(promotionName);
-        if (!promotionOpt.isPresent()) {
-            return false;
-        }
-        Promotion promotion = promotionOpt.get();
-        return promotion.isActive(date);
-    }
-
-    public int calculateBonusQuantity(String promotionName, int purchaseQuantity) {
-        Optional<Promotion> promotionOpt = promotionRepository.findByName(promotionName);
-        if (!promotionOpt.isPresent()) {
-            return 0;
-        }
-        Promotion promotion = promotionOpt.get();
-        int buyQuantity = promotion.getBuyQuantity();
-        int getQuantity = promotion.getGetQuantity();
-        int bonusTimes = purchaseQuantity / buyQuantity;
-        return bonusTimes * getQuantity;
+    public boolean isPromotionActive(String promotionName) {
+        var currentDate = DateTimes.now().toLocalDate();
+        return promotionRepository.findActivePromotionByName(promotionName)
+                .filter(promotion -> promotion.isActive(currentDate))
+                .isPresent();
     }
 
     public Promotion getActivePromotion(Product product) {
         String promotionName = product.getPromotion();
-        if ("NONE".equals(promotionName)) {
-            return null;
-        }
-        Optional<Promotion> optionalPromotion = promotionRepository.findByName(promotionName);
-        if (!optionalPromotion.isPresent()) {
-            return null;
-        }
-        Promotion promotion = optionalPromotion.get();
-        if (promotion.isActive(LocalDate.now())) {
-            return promotion;
-        }
-        return null;
+        var currentDate = DateTimes.now().toLocalDate();
+        return promotionRepository.findActivePromotionByName(promotionName)
+                .filter(promotion -> promotion.isActive(currentDate))
+                .orElse(null);
     }
 
-    public int calculateFreeItems(int quantity, Promotion promotion) {
+    public int calculateFreeItems(int purchaseQuantity, Promotion promotion) {
+        var currentDate = DateTimes.now().toLocalDate();
+        if (!promotion.isActive(currentDate)) {
+            return 0;
+        }
         int buyQuantity = promotion.getBuyQuantity();
         int getQuantity = promotion.getGetQuantity();
-        int freeItems = 0;
-        if (quantity >= buyQuantity) {
-            int applicableSets = quantity / buyQuantity;
-            freeItems = applicableSets * getQuantity;
+        int setsEligibleForFreeItem = purchaseQuantity / (buyQuantity + getQuantity);
+        int freeItems = setsEligibleForFreeItem * getQuantity;
+        int remainingQuantity = purchaseQuantity % (buyQuantity + getQuantity);
+        if (remainingQuantity >= buyQuantity) {
+            freeItems += getQuantity;
         }
         return freeItems;
     }
@@ -75,16 +58,5 @@ public class PromotionService {
         int promotionSetQuantity = buyQuantity + promotion.getGetQuantity();
         int remainingQuantity = quantity - buyQuantity;
         return remainingQuantity % promotionSetQuantity == 0;
-    }
-
-    public int calculateAdditionalFreeItems(Product product, int quantity) {
-        Promotion promotion = getActivePromotion(product);
-        if (promotion == null) {
-            return 0;
-        }
-        if (isEligibleForAdditionalPromotion(product, quantity)) {
-            return promotion.getGetQuantity();
-        }
-        return 0;
     }
 }

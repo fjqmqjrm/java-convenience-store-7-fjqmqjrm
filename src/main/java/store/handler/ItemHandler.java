@@ -3,6 +3,7 @@ package store.handler;
 import store.order.domain.Order;
 import store.order.service.OrderService;
 import store.product.domain.Product;
+import store.product.domain.Promotion;
 import store.product.repository.ProductRepository;
 import store.product.service.PromotionService;
 import store.util.parser.InputParser;
@@ -44,7 +45,7 @@ public class ItemHandler {
             } catch (IllegalArgumentException e) {
                 outputView.printErrorMessage(e.getMessage());
                 String newInput = inputView.readItem();
-                handleItems(order, inputParser.parseItems(newInput)); // 재귀적으로 다시 시도
+                handleItems(order, inputParser.parseItems(newInput));
             }
         }
     }
@@ -52,8 +53,7 @@ public class ItemHandler {
     private void processProduct(Order order, String productName, int quantity) {
         Product product = getProduct(productName);
         if (!hasSufficientStock(product, quantity)) {
-            outputView.printErrorMessage("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
-            return;
+            throw new IllegalArgumentException("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
         boolean addExtraGift = shouldAddExtraGift(product, quantity);
         int finalQuantity = calculateFinalQuantity(quantity, addExtraGift, product);
@@ -71,20 +71,28 @@ public class ItemHandler {
     }
 
     private boolean shouldAddExtraGift(Product product, int quantity) {
-        if (promotionService.isEligibleForAdditionalPromotion(product, quantity)) {
+        Promotion promotion = promotionService.getActivePromotion(product);
+        if (promotion != null && promotionService.isEligibleForAdditionalPromotion(product, quantity)) {
             outputView.printPromotionAddition(product.getName());
-            String response = inputView.readYesOrNo();
-            return "Y".equalsIgnoreCase(response);
+            while (true) {
+                try {
+                    String response = inputView.readYesOrNo();
+                    return "Y".equalsIgnoreCase(response);
+                } catch (IllegalArgumentException e) {
+                    outputView.printErrorMessage(e.getMessage());
+                }
+            }
         }
         return false;
     }
 
     private int calculateFinalQuantity(int quantity, boolean addExtraGift, Product product) {
-        if (addExtraGift) {
-            int additionalFreeItems = promotionService.calculateAdditionalFreeItems(product, quantity);
-            return quantity + additionalFreeItems;
+        Promotion promotion = promotionService.getActivePromotion(product);
+        int additionalFreeItems = 0;
+        if (addExtraGift && promotion != null) {
+            additionalFreeItems = promotionService.calculateFreeItems(quantity, promotion);
         }
-        return quantity;
+        return quantity + additionalFreeItems;
     }
 
     public InputParser getInputParser() {

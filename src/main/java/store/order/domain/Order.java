@@ -25,7 +25,7 @@ public class Order {
     }
 
     public void addOrderItem(Product product, int quantity, Promotion promotion, int bonusQuantity) {
-        OrderItem item = new OrderItem(product, quantity+bonusQuantity, promotion, bonusQuantity);
+        OrderItem item = new OrderItem(product, quantity, promotion, bonusQuantity);
         orderItems.add(item);
     }
 

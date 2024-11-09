@@ -66,4 +66,9 @@ public class OutputView {
     public void printPromotionStockMessage(String productName, int quantity) {
         System.out.printf("현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n", productName, quantity);
     }
+
+    public void printPromptContinueShoppingMessage() {
+        System.out.println();
+        System.out.println("감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+    }
 }

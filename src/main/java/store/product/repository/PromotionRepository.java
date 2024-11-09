@@ -7,6 +7,7 @@ import store.util.path.ResourcePaths;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.*;
 
 public class PromotionRepository {
@@ -49,4 +50,12 @@ public class PromotionRepository {
         return new HashMap<>(promotions);
     }
 
+    public Optional<Promotion> findActivePromotionByName(String name) {
+        return findByName(name).filter(this::isPromotionValid);
+    }
+
+    private boolean isPromotionValid(Promotion promotion) {
+        LocalDate currentDate = LocalDate.now();
+        return !currentDate.isBefore(promotion.getStartDate()) && !currentDate.isAfter(promotion.getEndDate());
+    }
 }
