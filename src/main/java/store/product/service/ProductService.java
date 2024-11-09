@@ -27,21 +27,31 @@ public class ProductService {
     }
 
     public void reduceProductQuantity(String name, int quantity) {
-        Optional<Product> productOpt = productRepository.findByName(name);
-        if (!productOpt.isPresent()) {
-            throw new IllegalArgumentException("[ERROR] 상품을 찾을 수 없습니다: " + name);
-        }
-        Product product = productOpt.get();
+        Product product = findProductOrThrow(name);
         int promotionStockToReduce = Math.min(product.getPromotionStock(), quantity);
         int regularStockToReduce = quantity - promotionStockToReduce;
 
+        reducePromotionStockQuantity(product, promotionStockToReduce);
+        reduceRegularStockQuantity(product, regularStockToReduce);
+
+        productRepository.update(product);
+    }
+
+    private Product findProductOrThrow(String name) {
+        return productRepository.findByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품을 찾을 수 없습니다: " + name));
+    }
+
+    private void reducePromotionStockQuantity(Product product, int promotionStockToReduce) {
         if (promotionStockToReduce > 0) {
             product.reducePromotionStock(promotionStockToReduce);
         }
+    }
+
+    private void reduceRegularStockQuantity(Product product, int regularStockToReduce) {
         if (regularStockToReduce > 0) {
             product.reduceQuantity(regularStockToReduce);
         }
-        productRepository.update(product);
     }
 
 

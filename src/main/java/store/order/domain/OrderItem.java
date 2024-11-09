@@ -20,8 +20,7 @@ public class OrderItem {
         if (promotion == null) {
             return 0;
         }
-        int applicablePromotions = quantity / promotion.getBuyQuantity();
-        int freeItems = applicablePromotions * promotion.getGetQuantity();
+        int freeItems = bonusQuantity;
 
         return freeItems * product.getPrice();
     }

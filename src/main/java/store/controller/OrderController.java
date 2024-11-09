@@ -1,132 +1,100 @@
 package store.controller;
 
 import store.order.domain.Order;
-import store.order.domain.Receipt;
 import store.order.service.OrderService;
-import store.product.domain.Product;
-import store.product.repository.ProductRepository;
+import store.order.service.DiscountService;
+import store.order.service.ReceiptService;
 import store.view.InputView;
 import store.view.OutputView;
+import store.handler.ItemHandler;
 
-import java.util.Map;
+import java.util.List;
 
 public class OrderController {
 
     private final OrderService orderService;
-    private final ProductRepository productRepository;
+    private final ItemHandler itemHandler;
+    private final DiscountService discountService;
+    private final ReceiptService receiptService;
     private final InputView inputView;
     private final OutputView outputView;
 
-    public OrderController(OrderService orderService, ProductRepository productRepository, InputView inputView, OutputView outputView) {
+    public OrderController(OrderService orderService, ItemHandler itemHandler, DiscountService discountService,
+                           ReceiptService receiptService, InputView inputView, OutputView outputView) {
         this.orderService = orderService;
-        this.productRepository = productRepository;
+        this.itemHandler = itemHandler;
+        this.discountService = discountService;
+        this.receiptService = receiptService;
         this.inputView = inputView;
         this.outputView = outputView;
     }
 
     public void run() {
         boolean continueShopping = true;
-
         while (continueShopping) {
-            try {
-                processShopping();
-            } catch (Exception e) {
-                outputView.printErrorMessage(e.getMessage());
-            }
-
+            startShoppingSession();
             continueShopping = promptContinueShopping();
         }
     }
 
-    private void processShopping() {
-        defaultStartPrint();
-        Order order = orderService.createOrder();
-        String[] items = getCustomerItems();
-
-        for (String item : items) {
-            handleItem(order, item);
+    private void startShoppingSession() {
+        try {
+            processShopping();
+        } catch (Exception e) {
+            outputView.printErrorMessage(e.getMessage());
         }
+    }
 
+    private void processShopping() {
+        displayAvailableProducts();
+        Order order = orderService.createOrder();
+        processItems(order);
         applyDiscountsAndPrintReceipt(order);
     }
 
-    private void defaultStartPrint() {
+    private void displayAvailableProducts() {
         outputView.printWelcomeMessage();
-        Map<String, Product> products = productRepository.findAll();
-        outputView.printProducts(products);
+        outputView.printProducts(itemHandler.getAllProducts());
     }
 
-    private String[] getCustomerItems() {
-        String input = inputView.readItem();
-        return parseInput(input);
-    }
-
-    private void handleItem(Order order, String item) {
-        String[] parts = item.split("-");
-        validateInput(parts);
-        String productName = parts[0].trim();
-        int quantity = parseQuantity(parts[1].trim());
-
-        Product product = getProduct(productName);
-        quantity = checkAndApplyPromotion(product, quantity);
-
-        orderService.addProductToOrder(order, productName, quantity);
-    }
-
-    private Product getProduct(String productName) {
-        return productRepository.findByName(productName)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
-    }
-
-    private int checkAndApplyPromotion(Product product, int quantity) {
-        if (orderService.isEligibleForAdditionalPromotion(product, quantity)) {
-            outputView.printPromotionAddition(product.getName());
-            String response = inputView.readYesOrNo();
-            if ("Y".equalsIgnoreCase(response)) {
-                int additionalFreeItems = orderService.calculateAdditionalFreeItems(product, quantity);
-                quantity += additionalFreeItems;
+    private void processItems(Order order) {
+        boolean validInput = false;
+        while (!validInput) {
+            try {
+                List<String[]> items = getCustomerItems();
+                itemHandler.handleItems(order, items);
+                validInput = true;
+            } catch (IllegalArgumentException e) {
+                outputView.printErrorMessage(e.getMessage());
             }
         }
-        return quantity;
+    }
+
+    private List<String[]> getCustomerItems() {
+        String input = inputView.readItem();
+        return itemHandler.getInputParser().parseItems(input);
     }
 
     private void applyDiscountsAndPrintReceipt(Order order) {
         handleMembershipDiscount(order);
         orderService.completeOrder(order);
-        Receipt receipt = orderService.generateReceipt(order);
-        outputView.printReceipt(receipt.generateReceipt());
-    }
-
-    private String[] parseInput(String input) {
-        return input.replaceAll("[\\[\\]]", "").split(",");
-    }
-
-    private void validateInput(String[] parts) {
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
-        }
-    }
-
-    private int parseQuantity(String quantityStr) {
-        try {
-            return Integer.parseInt(quantityStr);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("수량은 숫자여야 합니다. 다시 입력해 주세요.");
-        }
+        printReceipt(order);
     }
 
     private void handleMembershipDiscount(Order order) {
         outputView.printMembershipDiscountPrompt();
         String membershipInput = inputView.readYesOrNo();
-        if ("Y".equalsIgnoreCase(membershipInput)) {
-            order.setMembership(true);
-        }
+        discountService.applyMembershipDiscount(order, membershipInput);
+    }
+
+    private void printReceipt(Order order) {
+        int totalDiscount = discountService.calculateTotalDiscount(order);
+        outputView.printReceipt(receiptService.generateReceipt(order, totalDiscount).generateReceipt());
     }
 
     private boolean promptContinueShopping() {
         System.out.println();
         System.out.println("감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
-        String addMore = inputView.readYesOrNo();
-        return "Y".equals(addMore);
+        return "Y".equalsIgnoreCase(inputView.readYesOrNo());
     }
 }

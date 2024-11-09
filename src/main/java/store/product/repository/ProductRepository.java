@@ -2,7 +2,7 @@ package store.product.repository;
 
 import store.product.domain.Product;
 import store.product.parser.ProductParser;
-import store.util.ResourcePaths;
+import store.util.path.ResourcePaths;
 
 import java.io.IOException;
 import java.nio.file.Files;
