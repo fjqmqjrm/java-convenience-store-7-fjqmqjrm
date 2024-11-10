@@ -40,10 +40,6 @@ public class Order {
         isCompleted = true;
     }
 
-    public boolean isCompleted() {
-        return isCompleted;
-    }
-
     public void setMembership(boolean isMembership) {
         this.isMembership = isMembership;
     }
@@ -67,7 +63,6 @@ public class Order {
         }
         return discount;
     }
-
 
     public int calculateTotalQuantity() {
         int total = 0;
