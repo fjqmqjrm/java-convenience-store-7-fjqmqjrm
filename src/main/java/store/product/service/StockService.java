@@ -1,6 +1,7 @@
 package store.product.service;
 
 import store.product.domain.Product;
+import store.product.service.message.StockServiceErrorMessages;
 
 public class StockService {
 
@@ -13,7 +14,7 @@ public class StockService {
         int regularStockToUse = totalRequiredQuantity - promotionStockToUse;
         if (regularStockToUse > 0) {
             if (regularStockToUse > product.getRegularQuantity()) {
-                throw new IllegalArgumentException("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다.");
+                throw new IllegalArgumentException(StockServiceErrorMessages.INSUFFICIENT_STOCK.getMessage());
             }
             product.reduceQuantity(regularStockToUse);
         }

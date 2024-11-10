@@ -2,6 +2,7 @@ package store.product.service;
 
 import store.product.domain.Product;
 import store.product.repository.ProductRepository;
+import store.product.service.message.ProductServiceErrorMessages;
 
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ public class ProductService {
 
     private Product findProductOrThrow(String name) {
         return productRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 상품을 찾을 수 없습니다: " + name));
+                .orElseThrow(() -> new IllegalArgumentException(ProductServiceErrorMessages.PRODUCT_NOT_FOUND.getMessage(name)));
     }
 
     private void reducePromotionStockQuantity(Product product, int promotionStockToReduce) {
