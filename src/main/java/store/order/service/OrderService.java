@@ -2,6 +2,7 @@ package store.order.service;
 
 import store.membership.service.MembershipService;
 import store.order.domain.Order;
+import store.order.service.message.OrderServiceErrorMessages;
 import store.product.domain.Product;
 import store.product.domain.Promotion;
 import store.order.repository.OrderRepository;
@@ -49,13 +50,13 @@ public class OrderService {
     private void validateStock(Product product, int quantity) {
         int availableStock = product.getPromotionStock() + product.getRegularQuantity();
         if (quantity > availableStock) {
-            throw new IllegalArgumentException("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+            throw new IllegalArgumentException(OrderServiceErrorMessages.STOCK_EXCEEDED.getMessage());
         }
     }
 
     private Product getProduct(String productName) {
         return productRepository.findByName(productName)
-                .orElseThrow(() -> new IllegalArgumentException("[ERROR] 존재하지 않는 상품입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(OrderServiceErrorMessages.PRODUCT_NOT_FOUND.getMessage()));
     }
 
 
@@ -74,7 +75,7 @@ public class OrderService {
 
     private void validateOrder(Order order) {
         if (order == null) {
-            throw new IllegalStateException("[ERROR] 주문이 생성되지 않았습니다.");
+            throw new IllegalStateException(OrderServiceErrorMessages.ORDER_NOT_CREATED.getMessage());
         }
     }
 
