@@ -55,9 +55,28 @@ public class ItemHandler {
         if (!hasSufficientStock(product, quantity)) {
             throw new IllegalArgumentException("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
-        boolean addExtraGift = shouldAddExtraGift(product, quantity);
-        int finalQuantity = calculateFinalQuantity(quantity, addExtraGift, product);
-        orderService.addProductToOrder(order, productName, finalQuantity);
+
+        Promotion promotion = promotionService.getActivePromotion(product);
+        int nonPromotionQuantity = 0;
+        int promotionQuantity = quantity;
+        if (promotion == null) {
+            orderService.addProductToOrder(order, product.getName(), 0, quantity);
+            return;
+        }
+        if (promotion != null) {
+            nonPromotionQuantity = promotionService.calculateNonPromotionQuantity(product, quantity);
+            promotionQuantity = quantity - nonPromotionQuantity;
+
+            if (nonPromotionQuantity > 0) {
+                outputView.printPromotionStockMessage(product.getName(), nonPromotionQuantity);
+                String response = getValidatedYesOrNo();
+                if ("N".equalsIgnoreCase(response)) {
+                    promotionQuantity = quantity - nonPromotionQuantity;
+                    nonPromotionQuantity = 0;
+                }
+            }
+        }
+        addProductWithPromotion(order, product, promotionQuantity, nonPromotionQuantity);
     }
 
     private boolean hasSufficientStock(Product product, int quantity) {
@@ -74,17 +93,19 @@ public class ItemHandler {
         Promotion promotion = promotionService.getActivePromotion(product);
         if (promotion != null && promotionService.isEligibleForAdditionalPromotion(product, quantity)) {
             outputView.printPromotionAddition(product.getName());
-            while (true) {
-                try {
-                    String response = inputView.readYesOrNo();
-                    return "Y".equalsIgnoreCase(response);
-                } catch (IllegalArgumentException e) {
-                    outputView.printErrorMessage(e.getMessage());
-                }
-            }
+            return "Y".equalsIgnoreCase(getValidatedYesOrNo());
         }
         return false;
     }
+
+    private void addProductWithPromotion(Order order, Product product, int promotionQuantity, int nonPromotionQuantity) {
+        boolean addExtraGift = shouldAddExtraGift(product, promotionQuantity);
+        int finalPromotionQuantity = calculateFinalQuantity(promotionQuantity, addExtraGift, product);
+
+        orderService.addProductToOrder(order, product.getName(), finalPromotionQuantity, nonPromotionQuantity);
+    }
+
+
 
     private int calculateFinalQuantity(int quantity, boolean addExtraGift, Product product) {
         Promotion promotion = promotionService.getActivePromotion(product);
@@ -93,6 +114,16 @@ public class ItemHandler {
             additionalFreeItems = promotionService.calculateFreeItems(quantity, promotion);
         }
         return quantity + additionalFreeItems;
+    }
+
+    private String getValidatedYesOrNo() {
+        while (true) {
+            try {
+                return inputView.readYesOrNo();
+            } catch (IllegalArgumentException e) {
+                outputView.printErrorMessage(e.getMessage());
+            }
+        }
     }
 
     public InputParser getInputParser() {

@@ -59,4 +59,17 @@ public class PromotionService {
         int remainingQuantity = quantity - buyQuantity;
         return remainingQuantity % promotionSetQuantity == 0;
     }
+
+    public int calculateNonPromotionQuantity(Product product, int quantity) {
+        Promotion promotion = getActivePromotion(product);
+        if (promotion == null) {
+            return quantity;
+        }
+        int promotionSetQuantity = promotion.getBuyQuantity() + promotion.getGetQuantity();
+        int maxPromotionQuantity = product.getPromotionStock() / promotionSetQuantity * promotionSetQuantity;
+        if (quantity > maxPromotionQuantity) {
+            return quantity - maxPromotionQuantity;
+        }
+        return 0;
+    }
 }

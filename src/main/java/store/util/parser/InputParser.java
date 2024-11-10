@@ -7,7 +7,7 @@ public class InputParser {
 
     public List<String[]> parseItems(String input) {
         validateFormat(input.trim());
-        String[] items = input.trim().substring(1, input.length() - 1).split("],\\s*\\["); // 공백 허용
+        String[] items = input.trim().substring(1, input.length() - 1).split("],\\s*\\[");
         List<String[]> parsedItems = new ArrayList<>();
 
         for (String item : items) {
@@ -24,7 +24,7 @@ public class InputParser {
     }
 
     private String[] splitAndValidateItem(String item) {
-        String[] parts = item.replace("[", "").replace("]", "").split("\\s*-\\s*"); // 공백 허용
+        String[] parts = item.replace("[", "").replace("]", "").split("\\s*-\\s*");
         validateItemParts(parts);
         return parts;
     }

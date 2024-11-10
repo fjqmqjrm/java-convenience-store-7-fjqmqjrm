@@ -2,7 +2,6 @@ package store.order.service;
 
 import store.membership.service.MembershipService;
 import store.order.domain.Order;
-import store.order.domain.Receipt;
 import store.product.domain.Product;
 import store.product.domain.Promotion;
 import store.order.repository.OrderRepository;
@@ -32,14 +31,20 @@ public class OrderService {
         return order;
     }
 
-    public void addProductToOrder(Order order, String productName, int quantity) {
+    public void addProductToOrder(Order order, String productName, int promotionQuantity, int nonPromotionQuantity) {
         Product product = getProduct(productName);
-        validateStock(product, quantity);
+        validateStock(product, promotionQuantity + nonPromotionQuantity);
         Promotion promotion = promotionService.getActivePromotion(product);
-        applyPromotion(order, product, quantity, promotion);
-
+        if (promotion != null) {
+            applyPromotion(order, product, promotionQuantity, promotion);
+        }
+        if (nonPromotionQuantity > 0) {
+            order.addOrderItem(product, nonPromotionQuantity, null, 0);
+            stockService.reduceStock(product, nonPromotionQuantity, 0);
+        }
         orderRepository.save(order);
     }
+
 
     private void validateStock(Product product, int quantity) {
         int availableStock = product.getPromotionStock() + product.getRegularQuantity();
