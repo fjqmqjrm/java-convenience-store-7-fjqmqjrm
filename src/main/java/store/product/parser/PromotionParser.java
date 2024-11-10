@@ -11,14 +11,18 @@ public class PromotionParser {
     public List<Promotion> parsePromotions(List<String> lines) {
         List<Promotion> promotions = new ArrayList<>();
         for (String line : lines) {
-            if (isValidLine(line)) {
-                Promotion promotion = parsePromotion(line);
-                if (promotion != null) {
-                    promotions.add(promotion);
-                }
-            }
+            parseAndAddPromotion(line, promotions);
         }
         return promotions;
+    }
+
+    private void parseAndAddPromotion(String line, List<Promotion> promotions) {
+        if (isValidLine(line)) {
+            Promotion promotion = parsePromotion(line);
+            if (promotion != null) {
+                promotions.add(promotion);
+            }
+        }
     }
 
     private boolean isValidLine(String line) {
