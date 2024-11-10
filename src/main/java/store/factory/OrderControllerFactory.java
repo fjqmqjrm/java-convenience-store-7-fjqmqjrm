@@ -33,13 +33,10 @@ public class OrderControllerFactory {
         InputView inputView = new InputView();
         OutputView outputView = new OutputView();
         InputParser inputParser = new InputParser();
-
         ItemHandler itemHandler = new ItemHandler(productRepository, promotionService, orderService, inputParser, inputView, outputView);
-
         ShoppingSessionManager shoppingSessionManager = new ShoppingSessionManager(itemHandler, inputView, outputView, orderService);
         DiscountManager discountManager = new DiscountManager(discountService, inputView, outputView);
         ReceiptManager receiptManager = new ReceiptManager(receiptService, outputView);
-
         return new OrderController(shoppingSessionManager, discountManager, receiptManager, orderService, inputView, outputView);
     }
 }
