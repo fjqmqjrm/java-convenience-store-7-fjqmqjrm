@@ -30,17 +30,33 @@ public class OrderController {
     public void run() {
         boolean continueShopping = true;
         while (continueShopping) {
-            try {
-                Order order = shoppingSessionManager.startSession();
-                discountManager.applyDiscounts(order);
-                orderService.completeOrder(order);
-                int totalDiscount = discountManager.calculateTotalDiscount(order);
-                receiptManager.generateAndPrintReceipt(order, totalDiscount);
-            } catch (Exception e) {
-                outputView.printErrorMessage(e.getMessage());
-            }
+            executeShoppingSession();
             continueShopping = promptContinueShopping();
         }
+    }
+
+    private void executeShoppingSession() {
+        try {
+            Order order = shoppingSessionManager.startSession();
+            applyDiscounts(order);
+            completeOrder(order);
+            generateReceipt(order);
+        } catch (Exception e) {
+            outputView.printErrorMessage(e.getMessage());
+        }
+    }
+
+    private void applyDiscounts(Order order) {
+        discountManager.applyDiscounts(order);
+    }
+
+    private void completeOrder(Order order) {
+        orderService.completeOrder(order);
+    }
+
+    private void generateReceipt(Order order) {
+        int totalDiscount = discountManager.calculateTotalDiscount(order);
+        receiptManager.generateAndPrintReceipt(order, totalDiscount);
     }
 
     private boolean promptContinueShopping() {
