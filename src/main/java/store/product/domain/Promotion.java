@@ -1,5 +1,7 @@
 package store.product.domain;
 
+import store.product.domain.message.PromotionErrorMessages;
+
 import java.time.LocalDate;
 
 public class Promotion {
@@ -22,22 +24,22 @@ public class Promotion {
 
     private void validateName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("[ERROR] 프로모션 이름은 비어 있을 수 없습니다.");
+            throw new IllegalArgumentException(PromotionErrorMessages.EMPTY_NAME.getMessage());
         }
     }
 
     private void validateQuantities(int buyQuantity, int getQuantity) {
         if (buyQuantity <= 0 || getQuantity <= 0) {
-            throw new IllegalArgumentException("[ERROR] 구매 및 증정 수량은 1 이상이어야 합니다.");
+            throw new IllegalArgumentException(PromotionErrorMessages.INVALID_QUANTITIES.getMessage());
         }
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
-            throw new IllegalArgumentException("[ERROR] 시작일과 종료일은 null일 수 없습니다.");
+            throw new IllegalArgumentException(PromotionErrorMessages.NULL_DATES.getMessage());
         }
         if (endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("[ERROR] 종료일은 시작일보다 빠를 수 없습니다.");
+            throw new IllegalArgumentException(PromotionErrorMessages.END_DATE_BEFORE_START.getMessage());
         }
     }
 

@@ -1,6 +1,8 @@
 package store.product.parser;
 
 import store.product.domain.Product;
+import store.product.parser.message.ProductParserErrorMessages;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +48,7 @@ public class ProductParser {
         try {
             return Integer.parseInt(token);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("[ERROR] 숫자 형식이 올바르지 않습니다: " + token);
+            throw new IllegalArgumentException(ProductParserErrorMessages.INVALID_NUMBER_FORMAT.getMessage(token));
         }
     }
 
@@ -87,7 +89,7 @@ public class ProductParser {
         Product existingProduct = productMap.get(newProduct.getName());
         if (existingProduct == null) { productMap.put(newProduct.getName(), newProduct); return; }
         if (isDifferentPromotion(existingProduct, newProduct))
-            throw new IllegalArgumentException("[ERROR] 동일 상품에 여러 프로모션이 적용될 수 없습니다: " + newProduct.getName());
+            throw new IllegalArgumentException(ProductParserErrorMessages.MULTIPLE_PROMOTIONS_NOT_ALLOWED.getMessage(newProduct.getName()));
         existingProduct.setPromotionStock(existingProduct.getPromotionStock() + newProduct.getPromotionStock());
         existingProduct.setPromotion(newProduct.getPromotion());
     }
