@@ -2,6 +2,7 @@ package store.product.repository;
 
 import store.product.domain.Promotion;
 import store.product.parser.PromotionParser;
+import store.util.message.FileErrorMessages;
 import store.util.path.ResourcePaths;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class PromotionRepository {
         try {
             return Files.readAllLines(Paths.get(filePath));
         } catch (IOException e) {
-            throw new IllegalArgumentException("[ERROR] 유효하지 않은 파일 경로거나 파일을 읽을 수 없습니다.");
+            throw new IllegalArgumentException(FileErrorMessages.INVALID_FILE_PATH.getMessage());
         }
     }
 
