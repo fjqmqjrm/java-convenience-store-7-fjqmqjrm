@@ -1,5 +1,6 @@
 package store.order.domain;
 
+import store.order.domain.message.OrderErrorMessages;
 import store.product.domain.Product;
 import store.product.domain.Promotion;
 
@@ -35,7 +36,7 @@ public class Order {
 
     public void completeOrder() {
         if (isCompleted) {
-            throw new IllegalStateException("[ERROR] 주문이 이미 완료되었습니다.");
+            throw new IllegalStateException(OrderErrorMessages.ORDER_ALREADY_COMPLETED.getMessage());
         }
         isCompleted = true;
     }
