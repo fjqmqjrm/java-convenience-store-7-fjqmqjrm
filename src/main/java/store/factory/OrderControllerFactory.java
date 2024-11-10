@@ -1,6 +1,9 @@
 package store.factory;
 
 import store.controller.OrderController;
+import store.controller.manager.DiscountManager;
+import store.controller.manager.ReceiptManager;
+import store.controller.manager.ShoppingSessionManager;
 import store.membership.service.MembershipService;
 import store.order.repository.OrderRepository;
 import store.order.service.OrderService;
@@ -18,36 +21,25 @@ import store.handler.ItemHandler;
 public class OrderControllerFactory {
 
     public static OrderController createController() {
-        ProductRepository productRepository = createProductRepository();
-        PromotionService promotionService = createPromotionService();
-        OrderService orderService = createOrderService(productRepository, promotionService);
-        DiscountService discountService = createDiscountService();
+        ProductRepository productRepository = new ProductRepository();
+        PromotionRepository promotionRepository = new PromotionRepository();
+        OrderRepository orderRepository = new OrderRepository();
+        PromotionService promotionService = new PromotionService(promotionRepository);
+        MembershipService membershipService = new MembershipService();
+        StockService stockService = new StockService();
+        OrderService orderService = new OrderService(productRepository, orderRepository, membershipService, promotionService, stockService);
+        DiscountService discountService = new DiscountService(membershipService);
+        ReceiptService receiptService = new ReceiptService();
         InputView inputView = new InputView();
         OutputView outputView = new OutputView();
         InputParser inputParser = new InputParser();
-        ItemHandler itemHandler = createItemHandler(productRepository, promotionService, orderService, inputParser, inputView, outputView);
-        return new OrderController(orderService, itemHandler, discountService, new ReceiptService(), inputView, outputView);
-    }
 
-    private static ProductRepository createProductRepository() {
-        return new ProductRepository();
-    }
+        ItemHandler itemHandler = new ItemHandler(productRepository, promotionService, orderService, inputParser, inputView, outputView);
 
-    private static PromotionService createPromotionService() {
-        return new PromotionService(new PromotionRepository());
-    }
+        ShoppingSessionManager shoppingSessionManager = new ShoppingSessionManager(itemHandler, inputView, outputView, orderService);
+        DiscountManager discountManager = new DiscountManager(discountService, inputView, outputView);
+        ReceiptManager receiptManager = new ReceiptManager(receiptService, outputView);
 
-    private static OrderService createOrderService(ProductRepository productRepository, PromotionService promotionService) {
-        return new OrderService(productRepository, new OrderRepository(), new MembershipService(), promotionService, new StockService());
-    }
-
-    private static DiscountService createDiscountService() {
-        return new DiscountService(new MembershipService());
-    }
-
-    private static ItemHandler createItemHandler(ProductRepository productRepository, PromotionService promotionService,
-                                                 OrderService orderService, InputParser inputParser,
-                                                 InputView inputView, OutputView outputView) {
-        return new ItemHandler(productRepository, promotionService, orderService, inputParser, inputView, outputView);
+        return new OrderController(shoppingSessionManager, discountManager, receiptManager, orderService, inputView, outputView);
     }
 }

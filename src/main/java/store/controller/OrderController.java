@@ -1,30 +1,28 @@
 package store.controller;
 
+import store.controller.manager.DiscountManager;
+import store.controller.manager.ReceiptManager;
+import store.controller.manager.ShoppingSessionManager;
 import store.order.domain.Order;
 import store.order.service.OrderService;
-import store.order.service.DiscountService;
-import store.order.service.ReceiptService;
 import store.view.InputView;
 import store.view.OutputView;
-import store.handler.ItemHandler;
-
-import java.util.List;
 
 public class OrderController {
 
+    private final ShoppingSessionManager shoppingSessionManager;
+    private final DiscountManager discountManager;
+    private final ReceiptManager receiptManager;
     private final OrderService orderService;
-    private final ItemHandler itemHandler;
-    private final DiscountService discountService;
-    private final ReceiptService receiptService;
     private final InputView inputView;
     private final OutputView outputView;
 
-    public OrderController(OrderService orderService, ItemHandler itemHandler, DiscountService discountService,
-                           ReceiptService receiptService, InputView inputView, OutputView outputView) {
+    public OrderController(ShoppingSessionManager shoppingSessionManager, DiscountManager discountManager,
+                           ReceiptManager receiptManager, OrderService orderService, InputView inputView, OutputView outputView) {
+        this.shoppingSessionManager = shoppingSessionManager;
+        this.discountManager = discountManager;
+        this.receiptManager = receiptManager;
         this.orderService = orderService;
-        this.itemHandler = itemHandler;
-        this.discountService = discountService;
-        this.receiptService = receiptService;
         this.inputView = inputView;
         this.outputView = outputView;
     }
@@ -32,73 +30,17 @@ public class OrderController {
     public void run() {
         boolean continueShopping = true;
         while (continueShopping) {
-            startShoppingSession();
+            try {
+                Order order = shoppingSessionManager.startSession();
+                discountManager.applyDiscounts(order);
+                orderService.completeOrder(order);
+                int totalDiscount = discountManager.calculateTotalDiscount(order);
+                receiptManager.generateAndPrintReceipt(order, totalDiscount);
+            } catch (Exception e) {
+                outputView.printErrorMessage(e.getMessage());
+            }
             continueShopping = promptContinueShopping();
         }
-    }
-
-    private void startShoppingSession() {
-        try {
-            processShopping();
-        } catch (Exception e) {
-            outputView.printErrorMessage(e.getMessage());
-        }
-    }
-
-    private void processShopping() {
-        displayAvailableProducts();
-        Order order = orderService.createOrder();
-        processItems(order);
-        applyDiscountsAndPrintReceipt(order);
-    }
-
-    private void displayAvailableProducts() {
-        outputView.printWelcomeMessage();
-        outputView.printProducts(itemHandler.getAllProducts());
-    }
-
-    private void processItems(Order order) {
-        boolean validInput = false;
-        while (!validInput) {
-            try {
-                List<String[]> items = getCustomerItems();
-                itemHandler.handleItems(order, items);
-                validInput = true;
-            } catch (IllegalArgumentException e) {
-                outputView.printErrorMessage(e.getMessage());
-            }
-        }
-    }
-
-    private List<String[]> getCustomerItems() {
-        String input = inputView.readItem();
-        return itemHandler.getInputParser().parseItems(input);
-    }
-
-    private void applyDiscountsAndPrintReceipt(Order order) {
-        handleMembershipDiscount(order);
-        orderService.completeOrder(order);
-        printReceipt(order);
-    }
-
-    private void handleMembershipDiscount(Order order) {
-        outputView.printMembershipDiscountPrompt();
-        boolean validInput = false;
-        while (!validInput) {
-            try {
-                String membershipInput = inputView.readYesOrNo();
-                discountService.applyMembershipDiscount(order, membershipInput);
-                validInput = true;
-            } catch (IllegalArgumentException e) {
-                outputView.printErrorMessage(e.getMessage());
-            }
-        }
-    }
-
-
-    private void printReceipt(Order order) {
-        int totalDiscount = discountService.calculateTotalDiscount(order);
-        outputView.printReceipt(receiptService.generateReceipt(order, totalDiscount).generateReceipt());
     }
 
     private boolean promptContinueShopping() {
